@@ -106,3 +106,4 @@ x <- data.frame(data1,sample(size = 126, x=150))
 boxplot(data1, horizontal = FALSE)
 hist(data1)
 ```
+metodos de conteo (Suma, multiplcación)
