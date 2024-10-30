@@ -18,3 +18,9 @@ CREATE TABLE ASIGNATURA(
 	Nombre VARCHAR(50),
 	Semestre VARCHAR(100)
 );
+INSERT INTO uce.asignatura(nombre,semestre) 
+	VALUES('Introducción a la matemática', 'primero')*/
+
+SELECT version()
+
+SELECT * FROM uce.asignatura;
