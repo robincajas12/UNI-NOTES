@@ -10,4 +10,4 @@ select * from producto;
 select * from fabricante ;
 select producto.nombre as p_nombre, producto.precio, fabricante.nombre as f_nombre from producto cross join fabricante on producto.id_fabricante = fabricante.id;
 
--- ddl para objetos, dml para datos
+-- ddl para objetos, dml para datos, dcl para seguridad
