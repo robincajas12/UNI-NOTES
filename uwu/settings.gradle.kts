@@ -13,3 +13,5 @@ plugins {
 rootProject.name = "uwu"
 include("lib")
 include("singleton")
+include("factorymethod")
+include("factorymethod2")
