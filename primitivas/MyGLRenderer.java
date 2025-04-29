@@ -7,6 +7,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class MyGLRenderer implements GLSurfaceView.Renderer {
+    private Point point;
+    int count = 0;
     public static float c(Integer value)
     {
         return ((float) value / 255);
@@ -14,6 +16,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(c(114), c(179), c(253), 1.0f);
+        point = new Point();
     }
 
     @Override
@@ -24,5 +27,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        
+        Point.pointCoord[0] += 50;
+        point.draw();
     }
 }
