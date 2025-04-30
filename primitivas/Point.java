@@ -18,6 +18,7 @@ public class Point {
     private final int vertexStride = COORDS_FOR_VERTEX * 4;
     private float color[] = {c(246),c(149), c(80),1.0f};
 
+
     public Point()
     {
        // ByteBuffer byteBuffer = ByteBuffer.allocateDirect(vertexCount);
@@ -59,12 +60,13 @@ public class Point {
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, vertexCount);
         GLES20.glDisableVertexAttribArray(positionHandle);
 
+
     }
     private final String vertexShaderCode =
                     "attribute vec4 vPosition;" +
                     "void main(){" +
                             "gl_Position= vPosition;" +
-                            "gl_PointSize = 600.0;" +
+                            "gl_PointSize = 100.0;" +
                     "}";
     private final String fragmentShaderCode =
             "precision mediump float;" +
