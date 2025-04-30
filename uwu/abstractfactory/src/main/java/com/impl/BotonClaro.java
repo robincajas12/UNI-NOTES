@@ -8,6 +8,6 @@ public class BotonClaro implements Boton {
 
     @Override
     public void dibujar() {
-
+        System.out.println("Claro btb");
     }
 }
