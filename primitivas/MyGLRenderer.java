@@ -9,8 +9,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
     private Point point;
     private  Line line;
-    private  Line line2;
-
+    private Triangle triangle;
     Point p = new Point();
     int count = 0;
     public static float c(Integer value)
@@ -20,17 +19,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(c(114), c(179), c(253), 1.0f);
-        point = new Point();
-
-        line2 = new Line(new float[]{
-                        -1.0f, 1.0f,
-                        0f, -1.0f
-                });
-        line = new Line(new float[]{
-                -1.0f, 0.7f,
-                -0.5f, -1.0f
-        });
-
+        triangle = new Triangle();
     }
 
     @Override
@@ -41,9 +30,15 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        point.draw();
-        line2.draw();
-        line.draw();
+        triangle.draw();
 
+
+    }
+    static int loadShader(int type, String shaderCode)
+    {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
     }
 }
