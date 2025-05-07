@@ -8,52 +8,65 @@ import android.opengl.GLES20;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Square {
+public class Circle {
     private final FloatBuffer vertexBuffer;
     private final int mProgram;
     private int positionHandle;
     private int colorHandle;
     private static final int COORDS_PER_VERTEX = 3;
     static float[] color = {c(246),c(149), c(80),1.0f};
-    static float[] coords = {
-            -0.5f,0.8f,0f,
-            -0.5f,0.2f,0f,
-            0.1f,0.2f,0f,
-            0.1f,0.8f,0f
-    };
-    private final short drawOrder[] = {0,1,2,0,2,3};
-    private final ShortBuffer shortBuffer;
-    private final int vertexStride = COORDS_PER_VERTEX * 4;
-    public  Square()
+    private final int vertexCount;
+    private final int vexterStride = COORDS_PER_VERTEX * 4;
+
+    private float[] circleCoords;
+
+    public Circle(float r, int n)
     {
 
-        ByteBuffer buffer = ByteBuffer.allocateDirect(coords.length * 4);
+        circleCoords = createCircleCoords(r,n);
+        vertexCount = circleCoords.length/COORDS_PER_VERTEX;
+        ByteBuffer buffer = ByteBuffer.allocateDirect(circleCoords.length * 4);
         buffer.order(ByteOrder.nativeOrder());
         vertexBuffer = buffer.asFloatBuffer();
-        vertexBuffer.put(coords);
+        vertexBuffer.put(circleCoords);
         vertexBuffer.position(0);
-
-
-        ByteBuffer sb = ByteBuffer.allocateDirect(drawOrder.length * 4);
-        sb.order(ByteOrder.nativeOrder());
-        shortBuffer = sb.asShortBuffer();
-        shortBuffer.put(drawOrder);
-        shortBuffer.position(0);
-
-
         int idShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int idFragment = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
-
         mProgram = GLES20.glCreateProgram();
         GLES20.glAttachShader(mProgram, idShader);
         GLES20.glAttachShader(mProgram, idFragment);
         GLES20.glLinkProgram(mProgram);
 
+
+
     }
 
-    public void draw()
+    private float[] createCircleCoords(float r, int n) {
+        List<Float> coords = new ArrayList<>();
+        coords.add(0.0f); // centro x
+        coords.add(0.0f); // centro y
+        coords.add(0.0f); // centro z
+        float angle = (float) ((2*Math.PI)/n);
+        for(int i = 0; i <= n; i++)
+        {
+            double angle2 = angle*i;
+            coords.add((float) (r * Math.cos(angle2))); // x
+            coords.add((float) (r * Math.sin(angle2))); // y
+            coords.add(0.0f); // z
+
+        }
+        float[] coordsArray = new float[coords.size()];
+        for (int i = 0; i < coords.size(); i++) {
+            coordsArray[i] = coords.get(i); // Asignar cada elemento
+        }
+        return coordsArray;
+
+    }
+
+    public  void draw()
     {
         GLES20.glUseProgram(mProgram);
         positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
@@ -63,22 +76,20 @@ public class Square {
                 COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT,
                 false,
-                COORDS_PER_VERTEX * 4 ,
+                vexterStride ,
                 vertexBuffer);
 
         colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
         GLES20.glUniform4fv(colorHandle, 1, color, 0);
-        GLES20.glDrawElements(
-                GLES20.GL_TRIANGLES,
-                drawOrder.length,
-                GLES20.GL_UNSIGNED_SHORT,
-                shortBuffer);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, vertexCount);
         GLES20.glDisableVertexAttribArray(positionHandle);
     }
     private final String vertexShaderCode =
             "attribute vec4 vPosition;" +
                     "void main(){" +
                     "gl_Position= vPosition;" +
+                    "gl_PointSize = 100.0;" +
                     "}";
     private final String fragmentShaderCode =
             "precision mediump float;" +
