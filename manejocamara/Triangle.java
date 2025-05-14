@@ -12,12 +12,13 @@ import java.nio.FloatBuffer;
 public class Triangle {
     private final int mProgram;
     private int positionHandle;
+    private int uMVPMatrixHandle;
     private int colorHandle;
     private static final int COORDS_FOR_VERTEX = 3;
     private final float[] coords = {
-            -0.5f,0.0f,0.0f,
-            -0.5f,-0.75f,0.0f,
-            0.5f,-0.75f,0.0f
+            -1f,1f,0.0f,
+            1f,0f,0.0f,
+            -1f,-1f,0.0f
     };
     FloatBuffer vertexBuffer;
     private final int vertexCount = coords.length/COORDS_FOR_VERTEX;
@@ -40,7 +41,7 @@ public class Triangle {
 
     }
 
-    public void draw()
+    public void draw(float[] mVPMatriz)
     {
         GLES20.glUseProgram(mProgram);
         positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
@@ -50,15 +51,20 @@ public class Triangle {
         colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
         GLES20.glUniform4fv(colorHandle, 1, color, 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
+
+        uMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+
+        GLES20.glUniformMatrix4fv(uMVPMatrixHandle,1,false, mVPMatriz, 0);
         GLES20.glDisableVertexAttribArray(positionHandle);
 
     }
 
 
     private final String vertexShaderCode =
+            "uniform mat4 uMVPMatrix;"+
             "attribute vec4 vPosition;" +
                     "void main(){" +
-                    "gl_Position= vPosition;" +
+                    "gl_Position = uMVPMatrix * vPosition;" +
                     "}";
     private final String fragmentShaderCode =
             "precision mediump float;" +
