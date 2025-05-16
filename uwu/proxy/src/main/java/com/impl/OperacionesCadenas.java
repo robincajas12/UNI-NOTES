@@ -1,6 +1,6 @@
 package com.impl;
 
-import com.inter.OperacionesNumeros;
+import com.inter.IOperacionesCadenas;
 
 public class OperacionesCadenas implements IOperacionesCadenas {
 

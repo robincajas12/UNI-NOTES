@@ -11,7 +11,7 @@ public class ImpresionInvocationHandler implements InvocationHandler {
         this.target = target;
     }
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object... args) throws Throwable {
         System.out.printf("****** Operaciones %s(%s) \n", method.getName(), Arrays.toString(args));
         long inicio = System.nanoTime();
         Object res = method.invoke(target, args);
