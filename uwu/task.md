@@ -1,0 +1,9 @@
+- [x] decorator
+- [x] factory
+- [x] flyweigth
+- [x] Proxy
+- [x] abstract factory
+- [ ] adapter
+- [ ] bridge
+- [ ] singleton
+- [ ] Composite 
