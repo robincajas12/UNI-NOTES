@@ -6,5 +6,5 @@
 - [ ] adapter
 - [ ] bridge
 - [ ] singleton
-- [ ] Composite
+- [x] Composite
 - [ ] Prototype
