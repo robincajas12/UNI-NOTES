@@ -3,7 +3,7 @@
 - [x] flyweigth
 - [x] Proxy
 - [x] abstract factory
-- [ ] adapter
+- [x] adapter
 - [ ] bridge
 - [ ] singleton
 - [x] Composite
