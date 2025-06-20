@@ -185,29 +185,47 @@ public class Cube {
         GLES20.glEnableVertexAttribArray(normalHandle);
         GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 3*4, normalBuffer);
 
-        colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        GLES20.glUniform4fv(colorHandle, 1, color, 0);
+
+
+        int mvpMatrixHadle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        GLES20.glUniformMatrix4fv(mvpMatrixHadle, 1, false, vpMatrix, 0);
+
         int mvMatrixHandler = GLES20.glGetUniformLocation(mProgram, "uMVMatrix");
         GLES20.glUniformMatrix4fv(mvMatrixHandler, 1, false, mvMatrix, 0);
 
-        int uMVMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVMatrix");
-        GLES20.glUniformMatrix4fv(mvMatrix, 1, false, v, 0);
+        int lightHandle = GLES20.glGetUniformLocation(mProgram, "lightPosition");
+        GLES20.glUniform3f(lightHandle, 3f,3f,3f);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, vertexCount, GLES20.GL_UNSIGNED_SHORT, shortBuffer);
+        colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        GLES20.glUniform4f(colorHandle, 1, 0.5f,0f,1f);
+
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, shortBuffer);
         GLES20.glDisableVertexAttribArray(positionHandle);
+        GLES20.glDisableVertexAttribArray(normalHandle);
     }
 
     private final String vertexShaderCode =
             "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 aPosition;" +
+                    "uniform mat4 uMVMatrix;"+
+                    "attribute vec4 vPosition;" +
+                    "attribute vec3 vNormal;" +
+                    "varying vec3 aNormal;" +
+                    "varying vec3 aPosition;" +
                     "void main() {" +
-                    "  gl_Position = uMVPMatrix * vPosition;" +
+                    "   aPosition = vec3(uMVMatrix * vPosition);"+
+                    "   aNormal = normalize(mat3(uMVMatrix) * vNormal);"+
+                    "   gl_Position = uMVPMatrix * vPosition;" +
                     "}";
-
     private final String fragmentShaderCode =
             "precision mediump float;" +
+                    "uniform vec3 lightPosition;" +
                     "uniform vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = vColor;" +
+                    "varying vec3 aNormal;" +
+                    "varying vec3 aPosition;"+
+                    "void main(){" +
+                    "vec3 lightDir = normalize(lightPosition - aPosition);" +
+                    "float diff = max(dot(aNormal, lightDir), 0.0);"+
+                    "vec4 diffuse = diff * vColor;" +
+                    "  gl_FragColor = diffuse;" +
                     "}";
 }
