@@ -13,5 +13,8 @@ public class Main  {
         miChat.addUser(juan);
         miChat.sendMessage("Hola...", juan);
         miChat.sendMessage("Hola juan...", robin);
+        juan.send("Holaaaaaaaa a todos");
+        robin.send("Holaaa mundoioooooooooooooooooooooo");
+
     }
 }
