@@ -1,4 +1,3 @@
-
 # Libro de Gráficos por Computadora: OpenGL ES 2.0
 
 ¡Bienvenido, futuro experto en gráficos por computadora!
@@ -444,3 +443,128 @@ void main() {
 ---
 
 ¡Felicidades! Has completado un recorrido intensivo por los conceptos fundamentales y avanzados de OpenGL ES 2.0, todos ilustrados con tu propio código. Este libro es una referencia viva; úsalo para experimentar, cambiar valores en los shaders, añadir nuevas formas y explorar los infinitos caminos de los gráficos por computadora. ¡El límite es tu imaginación!
+
+---
+
+## Apéndice A: GLSL y la Conexión Java-Shader
+
+Esta es una de las áreas que más confusión causa al principio. ¿Cómo se comunican exactamente mi código Java (que se ejecuta en la CPU) y mis shaders (que se ejecutan en la GPU)? La respuesta está en un "contrato" bien definido a través de variables especiales en GLSL y un conjunto de funciones de la API de OpenGL en Java.
+
+### A.1. Introducción a GLSL (OpenGL Shading Language)
+
+GLSL es un lenguaje de programación similar a C, diseñado para ejecutarse en las GPUs. Tiene tipos de datos que ya conoces (`int`, `float`, `bool`) y otros específicos para gráficos:
+
+*   **Vectores**: `vec2`, `vec3`, `vec4` (para posiciones, colores, coordenadas de textura, etc.).
+*   **Matrices**: `mat2`, `mat3`, `mat4` (para transformaciones).
+*   **Sampler**: `sampler2D`, `samplerCube` (para acceder a texturas).
+
+La comunicación entre Java y GLSL se basa en tres tipos de "calificadores de almacenamiento":
+
+1.  **`attribute` (Atributo):**
+    *   **Propósito**: Pasar datos que son **diferentes para cada vértice**. Esto incluye la posición del vértice, el color del vértice, el vector normal o las coordenadas de textura.
+    *   **Dónde se usa**: **Solo en el Vertex Shader**. Es una entrada de datos.
+    *   **Cómo se alimenta desde Java**: A través de un `Buffer` (como `FloatBuffer`) y la función `glVertexAttribPointer()`.
+
+2.  **`uniform` (Uniforme):**
+    *   **Propósito**: Pasar datos que son **iguales para todos los vértices** en una misma llamada a `draw`. Piensa en ellos como variables globales de solo lectura para los shaders. Ejemplos típicos son la matriz de transformación (MVP), la posición de la luz o el color base de un objeto.
+    *   **Dónde se usa**: Tanto en el Vertex Shader como en el Fragment Shader.
+    *   **Cómo se alimenta desde Java**: Usando la familia de funciones `glUniform...()` (por ejemplo, `glUniformMatrix4fv` para una matriz 4x4, `glUniform4fv` para un `vec4` de color, `glUniform1i` para un entero).
+
+3.  **`varying` (Variable):**
+    *   **Propósito**: Pasar datos **desde el Vertex Shader al Fragment Shader**. OpenGL toma el valor de la `varying` en cada vértice del polígono y lo **interpola** suavemente a lo largo de la superficie del polígono. El Fragment Shader recibe el valor ya interpolado para cada píxel.
+    *   **Dónde se usa**: Se declara en ambos shaders con el mismo nombre. Se escribe en el Vertex Shader y se lee en el Fragment Shader.
+    *   **Cómo se alimenta**: Es una comunicación interna de la GPU. Java no interactúa directamente con las `varying`.
+
+### A.2. El Ritual de Conexión: Java -> GLSL
+
+Veamos el proceso paso a paso, como se ve en tu código (`primitivas/Triangle.java`).
+
+**Paso 1: Compilar y Vincular los Shaders (en el constructor del objeto)**
+
+Primero, el código de los shaders (que son strings en Java) se compila y se vincula en un "programa" de OpenGL.
+
+```java
+// 1. Compilar Vertex Shader
+int vertexShader = MyGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+// 2. Compilar Fragment Shader
+int fragmentShader = MyGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+
+// 3. Crear un programa de Shaders vacío
+mProgram = GLES20.glCreateProgram();
+
+// 4. Adjuntar los shaders al programa
+GLES20.glAttachShader(mProgram, vertexShader);
+GLES20.glAttachShader(mProgram, fragmentShader);
+
+// 5. Vincular el programa (crea los ejecutables para la GPU)
+GLES20.glLinkProgram(mProgram);
+```
+
+`mProgram` ahora contiene un ID numérico que es nuestro programa de shaders listo para usar.
+
+**Paso 2: Obtener "Handles" (Punteros) a las Variables del Shader (en el método `draw`)**
+
+No podemos simplemente decir "cambia la variable `vPosition`". Necesitamos obtener un puntero numérico (un "handle" o "location") a esa variable dentro del programa compilado. **Este es el paso clave que conecta el nombre de la variable en el string de GLSL con un ID que Java puede usar.**
+
+```java
+// Se le dice a OpenGL: "Voy a usar este programa ahora"
+GLES20.glUseProgram(mProgram);
+
+// Obtener el handle para el atributo 'vPosition' del Vertex Shader
+mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+
+// Obtener el handle para la uniform 'vColor' del Fragment Shader
+mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+
+// Obtener el handle para la uniform 'uMVPMatrix' del Vertex Shader
+mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+```
+*   `glGetAttribLocation`: Se usa para obtener el handle de una variable `attribute`.
+*   `glGetUniformLocation`: Se usa para obtener el handle de una variable `uniform`.
+
+Ahora, las variables de Java `mPositionHandle`, `mColorHandle`, y `mMVPMatrixHandle` contienen los IDs que necesitamos.
+
+**Paso 3: Usar los Handles para Enviar Datos (en el método `draw`)**
+
+Una vez que tenemos los handles, podemos usarlos para enviar los datos justo antes de dibujar.
+
+**Para los `attribute`:**
+
+```java
+// 1. Habilitar el handle del atributo. Sin esto, la GPU no lo leerá.
+GLES20.glEnableVertexAttribArray(mPositionHandle);
+
+// 2. Apuntar al buffer de datos de vértices.
+// Esto le dice a la GPU: "Para el atributo en mPositionHandle,
+// toma los datos de 'vertexBuffer', cada vértice tiene 'COORDS_PER_VERTEX' floats,
+// no están normalizados, el 'stride' (distancia entre vértices) es tanto..."
+GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+                             GLES20.GL_FLOAT, false,
+                             vertexStride, vertexBuffer);
+```
+
+**Para los `uniform`:**
+
+```java
+// Para la uniform 'vColor', usa el handle mColorHandle para enviar
+// el array de floats 'color'.
+GLES20.glUniform4fv(mColorHandle, 1, color, 0);
+
+// Para la uniform 'uMVPMatrix', usa el handle mMVPMatrixHandle para enviar
+// la matriz 'mvpMatrix'.
+GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+```
+
+**Paso 4: Dibujar y Limpiar**
+
+Después de enviar todos los datos, finalmente podemos dibujar.
+
+```java
+// Dibuja los triángulos usando los datos y shaders configurados.
+GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
+
+// Deshabilitar el handle del atributo como buena práctica.
+GLES20.glDisableVertexAttribArray(mPositionHandle);
+```
+
+¡Y eso es todo! Este ritual, aunque verboso, es el corazón de la comunicación entre Java y GLSL. Una vez que entiendes que se trata de un proceso de **Compilar -> Obtener Handles -> Usar Handles para Enviar Datos**, el flujo se vuelve mucho más claro.
