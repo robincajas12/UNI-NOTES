@@ -64,28 +64,50 @@ public class ServicioBooksImpl implements ServicioBooks
         return list;
     }
 
-    @Override
-    public void updateBook(Book book) {
+@Override
+public void updateBook(Book book) {
+    try(Connection connection = dataSource.getConnection()) {
+        var st = connection.prepareStatement(
+                "UPDATE book SET title = ?, price = ?, version = ? WHERE isbn = ?"
+        );
+        st.setString(1, book.getTitle());
+        st.setBigDecimal(2, book.getPrice());
+        st.setInt(3, book.getVersion());
+        st.setString(4, book.getIsbn());
+        st.executeUpdate();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
     }
+}
 
-    @Override
-    public void insert(Book book) {
-        try(Connection connection= dataSource.getConnection()) {
-            var st = connection.prepareStatement("INSERT INTO book(isbn, title, price, version) VALUE(?,?,?,?)");
-            st.setString(1, book.getIsbn());
-            st.setString(2, book.getTitle());
-            st.setBigDecimal(3, book.getPrice());
-            st.setInt(4, book.getVersion());
-            ResultSet resultSet = st.executeQuery();
-        }catch (Exception e){
-
-        }
+@Override
+public void insert(Book book) {
+    try(Connection connection= dataSource.getConnection()) {
+        var st = connection.prepareStatement(
+                "INSERT INTO book(isbn, title, price, version) VALUE(?,?,?,?)"
+        );
+        st.setString(1, book.getIsbn());
+        st.setString(2, book.getTitle());
+        st.setBigDecimal(3, book.getPrice());
+        st.setInt(4, book.getVersion());
+        st.executeUpdate(); // keep your structure, only corrected this line
+    }catch (Exception e){
+        // you had empty catch, so kept it
     }
+}
 
-    @Override
-    public void delete(String isbn) {
-
+@Override
+public void delete(String isbn) {
+    try(Connection connection = dataSource.getConnection()) {
+        var st = connection.prepareStatement("DELETE FROM book WHERE isbn = ?");
+        st.setString(1, isbn);
+        st.executeUpdate();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
     }
+}
+
 
 
 }
+
